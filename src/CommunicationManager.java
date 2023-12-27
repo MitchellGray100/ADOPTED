@@ -7,6 +7,7 @@ import java.net.Socket;
 
 public class CommunicationManager {
 	private static int clientCounter = 0;
+	private static Object lock = new Object();
 
 	public static void startServer(int port) {
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
@@ -14,11 +15,17 @@ public class CommunicationManager {
 
 			while (true) {
 				try {
-					Socket socket = serverSocket.accept();
-					System.out.println("Client " + clientCounter + "connected: " + socket.getInetAddress());
-					Thread clientThread = new Thread(
-							() -> handleConnection(socket, String.valueOf(clientCounter), NodeType.SERVER));
-					clientThread.start();
+					synchronized (lock) {
+						Socket socket = serverSocket.accept();
+						System.out.println("Client " + clientCounter + "connected: " + socket.getInetAddress());
+
+						Thread clientThread = new Thread(
+								() -> handleConnection(socket, String.valueOf(clientCounter), NodeType.SERVER));
+
+						clientThread.start();
+
+						clientCounter++;
+					}
 				} catch (IOException e) {
 					System.out.println("Server exception: " + e.getMessage());
 				}
@@ -42,7 +49,6 @@ public class CommunicationManager {
 	}
 
 	public static void handleConnection(Socket socket, String message, NodeType type) {
-		clientCounter++;
 		final boolean[] errorFound = { false };
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
