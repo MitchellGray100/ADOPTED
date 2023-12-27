@@ -13,10 +13,15 @@ public class Client {
 	public static void main(String[] args) {
 		try (BufferedReader reader = new BufferedReader(new FileReader("ipaddress.txt"))) {
 			String IPADDRESS = reader.readLine(); // Reads the first line of the file
-			Thread client1 = new Thread(() -> startClient(IPADDRESS, PORT));
+			System.out.println("IP found: " + IPADDRESS);
+			Thread client1 = new Thread(() -> startClient(IPADDRESS, PORT, "Client 1"));
 			client1.start();
-			Thread client2 = new Thread(() -> startClient2(IPADDRESS, PORT));
+			Thread client2 = new Thread(() -> startClient(IPADDRESS, PORT, "Client 2"));
 			client2.start();
+			Thread client3 = new Thread(() -> startClient(IPADDRESS, PORT, "Client 3"));
+			client3.start();
+			Thread client4 = new Thread(() -> startClient(IPADDRESS, PORT, "Client 4"));
+			client4.start();
 		} catch (IOException e) {
 			System.out.println("Error reading file: " + e.getMessage());
 			System.exit(1);
@@ -36,6 +41,19 @@ public class Client {
 		}
 	}
 
+	private static void startClient(String hostname, int port, String message) {
+		while (true) {
+			System.out.println("Trying to connect to Server");
+			try (Socket socket = new Socket(hostname, port)) {
+				System.out.println("Connected to server at " + hostname + ":" + port);
+				handleConnection(socket, message);
+				break;
+			} catch (IOException e) {
+				System.out.println("Failed to connect");
+			}
+		}
+	}
+
 	private static void handleConnection(Socket socket) {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -44,7 +62,6 @@ public class Client {
 			// Thread for sending messages
 			Thread writeThread = new Thread(() -> {
 				try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-					String userInput;
 					while (true && !errorFound) {
 						writer.println("test client");
 						try {
@@ -91,20 +108,7 @@ public class Client {
 		}
 	}
 
-	private static void startClient2(String hostname, int port) {
-		while (true) {
-			System.out.println("Trying to connect to Server");
-			try (Socket socket = new Socket(hostname, port)) {
-				System.out.println("Connected to server at " + hostname + ":" + port);
-				handleConnection2(socket);
-				break;
-			} catch (IOException e) {
-				System.out.println("Failed to connect");
-			}
-		}
-	}
-
-	private static void handleConnection2(Socket socket) {
+	private static void handleConnection(Socket socket, String message) {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -112,9 +116,8 @@ public class Client {
 			// Thread for sending messages
 			Thread writeThread = new Thread(() -> {
 				try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-					String userInput;
 					while (true && !errorFound) {
-						writer.println("test client 2");
+						writer.println(message);
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {
