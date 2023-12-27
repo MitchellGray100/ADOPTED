@@ -2,90 +2,48 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class CommunicationManager {
-	private static void startClient(String hostname, int port) {
-		while (true) {
-			System.out.println("Trying to connect to Server");
-			try (Socket socket = new Socket(hostname, port)) {
-				System.out.println("Connected to server at " + hostname + ":" + port);
-				handleConnection(socket);
-				break;
-			} catch (IOException e) {
-				System.out.println("Failed to connect");
-			}
-		}
-	}
+	private static int clientCounter = 0;
 
-	private static void startClient(String hostname, int port, String message) {
-		while (true) {
-			System.out.println("Trying to connect to Server");
-			try (Socket socket = new Socket(hostname, port)) {
-				System.out.println("Connected to server at " + hostname + ":" + port);
-				handleConnection(socket, message);
-				break;
-			} catch (IOException e) {
-				System.out.println("Failed to connect");
-			}
-		}
-	}
+	public static void startServer(int port) {
+		try (ServerSocket serverSocket = new ServerSocket(port)) {
+			System.out.println("Server is listening on port " + port);
 
-	private static void handleConnection(Socket socket) {
-		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-
-			// Thread for sending messages
-			Thread writeThread = new Thread(() -> {
-				try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-					while (true && !errorFound) {
-						writer.println("test client");
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-					consoleReader.close();
-					writer.close();
-				} catch (IOException e) {
-					System.out.println("Error writing to socket: " + e.getMessage());
-					errorFound = true;
-				}
-			});
-
-			// Thread for reading messages
-			Thread readThread = new Thread(() -> {
+			while (true) {
 				try {
-					String receivedMessage;
-					while ((receivedMessage = reader.readLine()) != null && !errorFound) {
-						System.out.println("Received: " + receivedMessage);
-					}
-					reader.close();
+					Socket socket = serverSocket.accept();
+					System.out.println("Client " + clientCounter + "connected: " + socket.getInetAddress());
+					Thread clientThread = new Thread(
+							() -> handleConnection(socket, String.valueOf(clientCounter), NodeType.SERVER));
+					clientThread.start();
 				} catch (IOException e) {
-					System.out.println("Error reading from socket: " + e.getMessage());
-					errorFound = true;
+					System.out.println("Server exception: " + e.getMessage());
 				}
-			});
-
-			readThread.start();
-			writeThread.start();
-
-			// Wait for threads to finish
-			try {
-				readThread.join();
-				writeThread.join();
-			} catch (InterruptedException e) {
-				System.out.println("Thread interrupted: " + e.getMessage());
 			}
 		} catch (IOException e) {
-			System.out.println("Error handling socket connection: " + e.getMessage());
+			System.out.println("Could not listen on port " + port);
 		}
 	}
 
-	private static void handleConnection(Socket socket, String message) {
+	public static void startClient(String hostname, int port, String message) {
+		while (true) {
+			System.out.println("Trying to connect to Server");
+			try (Socket socket = new Socket(hostname, port)) {
+				System.out.println("Connected to server at " + hostname + ":" + port);
+				handleConnection(socket, message, NodeType.CLIENT);
+				break;
+			} catch (IOException e) {
+				System.out.println("Failed to connect");
+			}
+		}
+	}
+
+	public static void handleConnection(Socket socket, String message, NodeType type) {
+		clientCounter++;
+		final boolean[] errorFound = { false };
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -93,20 +51,23 @@ public class CommunicationManager {
 			// Thread for sending messages
 			Thread writeThread = new Thread(() -> {
 				try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-					while (true && !errorFound) {
-						writer.println(message);
+					while (true && !errorFound[0]) {
+						if (type.equals(NodeType.CLIENT))
+							writer.println(message);
+						else
+							writer.println("Server received message from: client " + message);
+
 						try {
 							Thread.sleep(1000);
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
-					consoleReader.close();
 					writer.close();
+					consoleReader.close();
 				} catch (IOException e) {
 					System.out.println("Error writing to socket: " + e.getMessage());
-					errorFound = true;
+					errorFound[0] = true;
 				}
 			});
 
@@ -114,13 +75,13 @@ public class CommunicationManager {
 			Thread readThread = new Thread(() -> {
 				try {
 					String receivedMessage;
-					while ((receivedMessage = reader.readLine()) != null && !errorFound) {
-						System.out.println("Received: " + receivedMessage);
+					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
+						System.out.println(receivedMessage);
 					}
 					reader.close();
 				} catch (IOException e) {
-					System.out.println("Error reading from socket: " + e.getMessage());
-					errorFound = true;
+					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
+					errorFound[0] = true;
 				}
 			});
 
@@ -133,6 +94,12 @@ public class CommunicationManager {
 				writeThread.join();
 			} catch (InterruptedException e) {
 				System.out.println("Thread interrupted: " + e.getMessage());
+			} finally {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					System.out.println("Error closing socket: " + e.getMessage());
+				}
 			}
 		} catch (IOException e) {
 			System.out.println("Error handling socket connection: " + e.getMessage());
