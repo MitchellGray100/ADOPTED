@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -7,14 +8,19 @@ import java.net.Socket;
 public class Client {
 
 	private static final int PORT = 1234;
-	private static final String IPADDRESS = "10.0.0.6";
 	private volatile static boolean errorFound = false;
 
 	public static void main(String[] args) {
-		Thread client1 = new Thread(() -> startClient(IPADDRESS, PORT));
-		client1.start();
-		Thread client2 = new Thread(() -> startClient2(IPADDRESS, PORT));
-		client2.start();
+		try (BufferedReader reader = new BufferedReader(new FileReader("ipaddress.txt"))) {
+			String IPADDRESS = reader.readLine(); // Reads the first line of the file
+			Thread client1 = new Thread(() -> startClient(IPADDRESS, PORT));
+			client1.start();
+			Thread client2 = new Thread(() -> startClient2(IPADDRESS, PORT));
+			client2.start();
+		} catch (IOException e) {
+			System.out.println("Error reading file: " + e.getMessage());
+			System.exit(1);
+		}
 	}
 
 	private static void startClient(String hostname, int port) {

@@ -8,7 +8,6 @@ import java.net.Socket;
 public class Server {
 
 	private static final int PORT = 1234;
-	private static final String IPADDRESS = "10.0.0.12";
 	private static final Object lock = new Object();
 
 	public static void main(String[] args) {
