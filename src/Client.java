@@ -24,7 +24,8 @@ public class Client extends ComputeNode {
 	private void startClient(String hostname, int port) {
 		while (true) {
 			System.out.println("Trying to connect to Server");
-			try (Socket socket = new Socket(hostname, port)) {
+			try {
+				Socket socket = new Socket(hostname, port);
 				System.out.println("Connected to server at " + hostname + ":" + port);
 				serverSocket = socket;
 				startListening(socket);
