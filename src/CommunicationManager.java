@@ -24,10 +24,10 @@ public class CommunicationManager {
 						Socket socket = serverSocket.accept();
 						System.out.println("Client " + clientCounter + "connected: " + socket.getInetAddress());
 
-						Thread clientThread = new Thread(
+						Thread socketThread = new Thread(
 								() -> handleConnection(socket, String.valueOf(clientCounter), NodeType.SERVER));
 
-						clientThread.start();
+						socketThread.start();
 
 						clientCounter++;
 					}

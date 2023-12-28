@@ -2,7 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class Client {
+public class Client implements ComputeNode {
 
 	private static final int PORT = 1234;
 

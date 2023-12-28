@@ -1,4 +1,4 @@
-public class Server {
+public class Server implements ComputeNode {
 
 	private final int PORT;
 
