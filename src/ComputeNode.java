@@ -53,14 +53,7 @@ public abstract class ComputeNode {
 			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
 
 			Thread writeThread = new Thread(() -> {
-				try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-					writer.println(message);
-					writer.close();
-					consoleReader.close();
-				} catch (IOException e) {
-					System.out.println("Error writing to socket: " + e.getMessage());
-					errorFound[0] = true;
-				}
+				writer.println(message);
 			});
 			writeThread.start();
 
