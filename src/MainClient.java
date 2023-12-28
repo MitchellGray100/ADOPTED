@@ -14,9 +14,9 @@ public class MainClient {
 //			Client client2 = new Client(IPADDRESS, PORT);
 //			Client client3 = new Client(IPADDRESS, PORT);
 //			Client client4 = new Client(IPADDRESS, PORT);
-			while (!client1.canSendMessage(client1.getServerSocket())) {
-				System.out.println("Socket not open yet");
-			}
+//			while (!client1.canSendMessage(client1.getServerSocket())) {
+//				System.out.println("Socket not open yet");
+//			}
 			System.out.println("Can send message");
 			System.out.println(client1.sendMessage(client1.getServerSocket(), "hello"));
 			System.out.println("First message sent");
