@@ -1,7 +1,9 @@
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Server extends ComputeNode {
 
@@ -9,6 +11,7 @@ public class Server extends ComputeNode {
 	private final int PORT;
 	private static Object lock = new Object();// @TODO look at
 	private ArrayList<Socket> clientList = new ArrayList<Socket>();
+	private HashMap<InetAddress, Socket> IPSocketMap = new HashMap<InetAddress, Socket>();
 
 	public Server(int port) {
 		PORT = port;
@@ -29,6 +32,7 @@ public class Server extends ComputeNode {
 					Socket socket = serverSocket.accept();
 					System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
 					clientList.add(socket);
+					IPSocketMap.put(socket.getInetAddress(), socket);
 					startListening(socket, NodeType.SERVER);
 
 					clientCounter++;
@@ -50,4 +54,9 @@ public class Server extends ComputeNode {
 	public Socket getClient(int i) {
 		return clientList.get(i);
 	}
+
+	public Socket getSocket(InetAddress address) {
+		return IPSocketMap.get(address);
+	}
+
 }

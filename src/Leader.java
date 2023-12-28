@@ -1,10 +1,14 @@
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 class Leader {
 	private ConfigFile config;
 	private MonteCarloSearchTree MCST;
+	private Server server;
 
 	public Leader(String configPath) {
+		this.server = new Server(1234);
 		this.config = new ConfigFile(configPath);
 		MCST = new MonteCarloSearchTree();
 	}
@@ -18,13 +22,16 @@ class Leader {
 
 	public void runQuery(String query) {
 		for (String ipaddress : config.getIPaddresses()) {
-			runWithWorker(ipaddress);
+			try {
+				runWithWorker(InetAddress.getByName(ipaddress));
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
-	public void runWithWorker(String ipaddress) {
-		Client client = new Client(ipaddress);
-
+	public void runWithWorker(InetAddress ipaddress) {
 		send(ipaddress, "182", MCST.getAttributeOrder(), config.getBudget(), MCST.getNextHyperCube());
 		// Wait for response
 //		while(connected) {
@@ -38,9 +45,13 @@ class Leader {
 //		}
 	}
 
-	private boolean send(String IPAddress, String leaderIPAdress, int[] attributeOrder, long budget,
+	private boolean send(InetAddress IPAddress, String leaderIPAdress, int[] attributeOrder, long budget,
 			Hypercube nextHyperCube) {
-		// TODO Auto-generated method stub
-		return false;
+		String serializedData = serializeData(IPAddress, attributeOrder, budget, nextHyperCube);
+		return server.sendMessage(server.getSocket(IPAddress), serializedData);
+	}
+
+	private String serializeData(InetAddress IPAddress, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
+		return null;// TODO
 	}
 }
