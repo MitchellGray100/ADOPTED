@@ -9,8 +9,7 @@ public class Client extends ComputeNode {
 
 	public Client(String ipaddress, int port) {
 		PORT = port;
-		Thread client = new Thread(() -> startClient(ipaddress, PORT));
-		client.start();
+		startClient(ipaddress, PORT);
 	}
 
 	/**

@@ -19,17 +19,20 @@ public abstract class ComputeNode {
 		try {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-			try {
-				String receivedMessage;
-				while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
-					System.out.println(receivedMessage);
+			Thread readThread = new Thread(() -> {
+				try {
+					String receivedMessage;
+					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
+						System.out.println(receivedMessage);
+					}
+					reader.close();
+				} catch (IOException e) {
+					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
+					if (type.equals(NodeType.CLIENT))
+						errorFound[0] = true;
 				}
-				reader.close();
-			} catch (IOException e) {
-				System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
-				if (type.equals(NodeType.CLIENT))
-					errorFound[0] = true;
-			}
+			});
+			readThread.start();
 			System.out.println("Killed completely");
 
 		} catch (IOException e) {
