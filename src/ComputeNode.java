@@ -43,8 +43,12 @@ public abstract class ComputeNode {
 	 * @param socket  The socket connecting the client and server.
 	 * @param message The message to send over the socket.
 	 * @param type    Whether or not the compute node is a server or client.
+	 * @return whether or not the message sent successfully
 	 */
-	protected void sendMessage(Socket socket, String message) {
+	protected boolean sendMessage(Socket socket, String message) {
+		if (socket == null || !socket.isConnected())
+			return false;
+
 		try {
 			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
 
@@ -63,5 +67,12 @@ public abstract class ComputeNode {
 		} catch (IOException e) {
 			System.out.println("Error handling socket connection: " + e.getMessage());
 		}
+
+		return true;
 	}
+
+	protected boolean canSendMessage(Socket socket) {
+		return !(socket == null || !socket.isConnected());
+	}
+
 }

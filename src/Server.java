@@ -28,7 +28,7 @@ public class Server extends ComputeNode {
 				try {
 					synchronized (lock) {
 						Socket socket = serverSocket.accept();
-						System.out.println("Client " + clientCounter + "connected: " + socket.getInetAddress());
+						System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
 						clientList.add(socket);
 						startListening(socket);
 

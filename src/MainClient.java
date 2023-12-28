@@ -13,6 +13,8 @@ public class MainClient {
 			Client client2 = new Client(IPADDRESS, PORT);
 			Client client3 = new Client(IPADDRESS, PORT);
 			Client client4 = new Client(IPADDRESS, PORT);
+			while (!client1.canSendMessage(client1.getServerSocket())) {
+			}
 			client1.sendMessage(client1.getServerSocket(), "hello");
 		} catch (IOException e) {
 			System.out.println("Error reading file: " + e.getMessage());
