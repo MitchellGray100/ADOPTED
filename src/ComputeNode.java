@@ -14,7 +14,6 @@ public abstract class ComputeNode {
 	 * @param socket The specified socket.
 	 */
 	protected void startListening(Socket socket, NodeType type) {
-		System.out.println("ErrorFound: " + errorFound[0]);
 		BufferedReader reader;
 		try {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -33,7 +32,6 @@ public abstract class ComputeNode {
 				}
 			});
 			readThread.start();
-			System.out.println("Killed completely");
 
 		} catch (IOException e) {
 			System.err.println(socket.getInetAddress() + " Error encountered when listening: " + e.getMessage());

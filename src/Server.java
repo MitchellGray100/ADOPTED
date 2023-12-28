@@ -26,15 +26,12 @@ public class Server extends ComputeNode {
 
 			while (true) {
 				try {
-					synchronized (lock) {
-						Socket socket = serverSocket.accept();
-						System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
-						clientList.add(socket);
-						System.out.println("ClientList size: " + clientList.size());
-						startListening(socket, NodeType.SERVER);
+					Socket socket = serverSocket.accept();
+					System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
+					clientList.add(socket);
+					startListening(socket, NodeType.SERVER);
 
-						clientCounter++;
-					}
+					clientCounter++;
 				} catch (IOException e) {
 					System.out.println("Server exception: " + e.getMessage());
 				}
