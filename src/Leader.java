@@ -23,45 +23,24 @@ class Leader {
 	}
 
 	public void runWithWorker(String ipaddress) {
-		try {
-			connectWithIPAddress(ipaddress);
-		}
-		catch(NetworkingError e) {
-			System.err.println("Could not connect to machine: " + ipaddress);
-		}
+		Client client = new Client(ipaddress);
 
-
-		boolean connected = send(
-			ipaddress, 
-			"182", 
-			MCST.getAttributeOrder(), 
-			config.getBudget(), 
-			MCST.getNextHyperCube()
-		);
-		while(connected) {
-			if(response) {
-				appendOutputFile(response.file, config.getResultPath());
-				if(MCST.hasNextHypercube())
-					send(ipaddress, "182", attributeOrder, hypercube)
-				else
-					endConnectionWithIPAddress(ipaddress);
-			}
-		}
+		send(ipaddress, "182", MCST.getAttributeOrder(), config.getBudget(), MCST.getNextHyperCube());
+		// Wait for response
+//		while(connected) {
+//			if(response) {
+//				appendOutputFile(response.file, config.getResultPath());
+//				if(MCST.hasNextHypercube())
+//					send(ipaddress, "182", attributeOrder, hypercube)
+//				else
+//					endConnectionWithIPAddress(ipaddress);
+//			}
+//		}
 	}
 
 	private boolean send(String IPAddress, String leaderIPAdress, int[] attributeOrder, long budget,
 			Hypercube nextHyperCube) {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	private void endConnectionWithIPAddress(String ipaddress) {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void connectWithIPAddress(String ipaddress) {
-		// TODO Auto-generated method stub
-
 	}
 }

@@ -1,8 +1,9 @@
 public class Server {
 
-	private static final int PORT = 1234;
+	private final int PORT;
 
-	public static void main(String[] args) {
+	public Server(int port) {
+		PORT = port;
 		CommunicationManager.startServer(PORT);
 	}
 }

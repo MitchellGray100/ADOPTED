@@ -9,6 +9,11 @@ public class CommunicationManager {
 	private static int clientCounter = 0;
 	private static Object lock = new Object();
 
+	/**
+	 * Starts the server instance. Server listens on given port.
+	 * 
+	 * @param port Port to listen for.
+	 */
 	public static void startServer(int port) {
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
 			System.out.println("Server is listening on port " + port);
@@ -35,6 +40,14 @@ public class CommunicationManager {
 		}
 	}
 
+	/**
+	 * Starts the client. Client connects to server or waits for server to start
+	 * indefinitely.
+	 * 
+	 * @param hostname IPaddress of server.
+	 * @param port     Port the server is listening on.
+	 * @param message  What to send the server.
+	 */
 	public static void startClient(String hostname, int port, String message) {
 		while (true) {
 			System.out.println("Trying to connect to Server");
@@ -48,6 +61,13 @@ public class CommunicationManager {
 		}
 	}
 
+	/**
+	 * Sends and receives messages between the server and client.
+	 * 
+	 * @param socket  The socket connecting the client and server.
+	 * @param message The message to send over the socket.
+	 * @param type    Whether or not the compute node is a server or client.
+	 */
 	public static void handleConnection(Socket socket, String message, NodeType type) {
 		final boolean[] errorFound = { false };
 		try {

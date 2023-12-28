@@ -6,6 +6,11 @@ public class Client {
 
 	private static final int PORT = 1234;
 
+	public Client(String ipaddress) {
+		Thread client = new Thread(() -> CommunicationManager.startClient(ipaddress, PORT, "Client"));
+		client.start();
+	}
+
 	public static void main(String[] args) {
 		try (BufferedReader reader = new BufferedReader(new FileReader("ipaddress.txt"))) {
 			String IPADDRESS = reader.readLine(); // Reads the first line of the file
