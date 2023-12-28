@@ -6,7 +6,7 @@ import java.net.Socket;
 
 public abstract class ComputeNode {
 
-	final boolean[] errorFound = { false };
+	final boolean[] errorFound = new boolean[] { false };
 
 	/**
 	 * Allows socket to start receiving messages.
@@ -14,6 +14,7 @@ public abstract class ComputeNode {
 	 * @param socket The specified socket.
 	 */
 	protected void startListening(Socket socket) {
+		System.out.println("ErrorFound: " + errorFound[0]);
 		BufferedReader reader;
 		try {
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -31,6 +32,7 @@ public abstract class ComputeNode {
 				}
 			});
 			readThread.start();
+			System.out.println("Killed completely");
 
 		} catch (IOException e) {
 			System.err.println(socket.getInetAddress() + " Error encountered when listening: " + e.getMessage());
@@ -59,6 +61,7 @@ public abstract class ComputeNode {
 
 		} catch (IOException e) {
 			System.out.println("Error handling socket connection: " + e.getMessage());
+			errorFound[0] = true;
 		}
 
 		return true;
