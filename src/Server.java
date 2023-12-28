@@ -31,7 +31,7 @@ public class Server extends ComputeNode {
 						System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
 						clientList.add(socket);
 						System.out.println("ClientList size: " + clientList.size());
-						startListening(socket);
+						startListening(socket, NodeType.SERVER);
 
 						clientCounter++;
 					}

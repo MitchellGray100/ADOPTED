@@ -13,7 +13,7 @@ public abstract class ComputeNode {
 	 * 
 	 * @param socket The specified socket.
 	 */
-	protected void startListening(Socket socket) {
+	protected void startListening(Socket socket, NodeType type) {
 		System.out.println("ErrorFound: " + errorFound[0]);
 		BufferedReader reader;
 		try {
@@ -28,7 +28,8 @@ public abstract class ComputeNode {
 					reader.close();
 				} catch (IOException e) {
 					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
-					errorFound[0] = true;
+					if (type.equals(NodeType.CLIENT))
+						errorFound[0] = true;
 				}
 			});
 			readThread.start();
