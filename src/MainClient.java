@@ -19,9 +19,6 @@ public class MainClient {
 			System.out.println("Error reading file: " + e.getMessage());
 			System.exit(1);
 		}
-
-		System.out.println("Died");
-
 	}
 
 }
