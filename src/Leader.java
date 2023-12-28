@@ -9,7 +9,14 @@ class Leader {
 
 	public Leader(String configPath) {
 		this.server = new Server(1234);
-		this.config = new ConfigFile(configPath);
+		config = ConfigFile.getInstance(configPath);
+		while (config.getIPaddresses().length != server.getClientListSize()) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		MCST = new MonteCarloSearchTree();
 	}
 

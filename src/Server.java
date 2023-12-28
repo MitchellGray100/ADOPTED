@@ -24,25 +24,29 @@ public class Server extends ComputeNode {
 	 * @param port Port to listen for.
 	 */
 	private void startServer(int port) {
-		try (ServerSocket serverSocket = new ServerSocket(port)) {
-			System.out.println("Server is listening on port " + port);
+		Thread searchForClientsThread = new Thread(() -> {
+			try (ServerSocket serverSocket = new ServerSocket(port)) {
+				System.out.println("Server is listening on port " + port);
 
-			while (true) {
-				try {
-					Socket socket = serverSocket.accept();
-					System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
-					clientList.add(socket);
-					IPSocketMap.put(socket.getInetAddress(), socket);
-					startListening(socket, NodeType.SERVER);
+				while (true) {
+					try {
+						Socket socket = serverSocket.accept();
+						System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
+						clientList.add(socket);
+						IPSocketMap.put(socket.getInetAddress(), socket);
+						startListening(socket, NodeType.SERVER);
 
-					clientCounter++;
-				} catch (IOException e) {
-					System.out.println("Server exception: " + e.getMessage());
+						clientCounter++;
+					} catch (IOException e) {
+						System.out.println("Server exception: " + e.getMessage());
+					}
 				}
+
+			} catch (IOException e) {
+				System.out.println("Could not listen on port " + port);
 			}
-		} catch (IOException e) {
-			System.out.println("Could not listen on port " + port);
-		}
+		});
+		searchForClientsThread.start();
 	}
 
 	/**
@@ -53,6 +57,10 @@ public class Server extends ComputeNode {
 	 */
 	public Socket getClient(int i) {
 		return clientList.get(i);
+	}
+
+	public int getClientListSize() {
+		return clientList.size();
 	}
 
 	public Socket getSocket(InetAddress address) {

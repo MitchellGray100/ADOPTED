@@ -2,9 +2,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class ConfigFile {
+	private static ConfigFile instance;
 
-	public ConfigFile(String configPath) {
-		// TODO Auto-generated constructor stub
+	private ConfigFile(String configPath) {
+	}
+
+	public static ConfigFile getInstance(String configPath) {
+		if (instance == null) {
+			instance = new ConfigFile(configPath);
+		}
+		return instance;
 	}
 
 	public ArrayList<String> getQueries() {
@@ -14,7 +21,7 @@ public class ConfigFile {
 
 	public String[] getIPaddresses() {
 		// TODO Auto-generated method stub
-		return null;
+		return new String[] { "1", "2" };
 	}
 
 	public long getBudget() {
