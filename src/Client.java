@@ -3,9 +3,12 @@ import java.net.Socket;
 
 public class Client extends ComputeNode {
 
-	private static final int PORT = 1234;
+	private final int PORT;
+
+	private Socket serverSocket;
 
 	public Client(String ipaddress, int port) {
+		PORT = port;
 		Thread client = new Thread(() -> startClient(ipaddress, PORT));
 		client.start();
 	}
@@ -23,12 +26,16 @@ public class Client extends ComputeNode {
 			System.out.println("Trying to connect to Server");
 			try (Socket socket = new Socket(hostname, port)) {
 				System.out.println("Connected to server at " + hostname + ":" + port);
+				serverSocket = socket;
 				startListening(socket);
-//				handleConnection(socket, message, NodeType.CLIENT);
 				break;
 			} catch (IOException e) {
 				System.out.println("Failed to connect");
 			}
 		}
+	}
+
+	public Socket getServerSocket() {
+		return serverSocket;
 	}
 }
