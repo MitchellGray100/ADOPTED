@@ -1,16 +1,27 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-class Leader {
+class Leader extends ComputeNode {
 	private ConfigFile config;
 	private MonteCarloSearchTree MCST;
-	private Server server;
+	public ConcurrentLinkedQueue<Message> messageQueue = new ConcurrentLinkedQueue<Message>();
+	private static int clientCounter = 0;
+	private ArrayList<Socket> clientList = new ArrayList<Socket>();
+	private HashMap<InetAddress, Socket> IPSocketMap = new HashMap<InetAddress, Socket>();
 
 	public Leader(String configPath) {
-		this.server = new Server(ComputeNode.PORT);
+		startServer(ComputeNode.PORT);
 		config = ConfigFile.getInstance(configPath);
-		while (config.getIPaddresses().length != server.getClientListSize()) {
+
+		while (config.getIPaddresses().length != getClientListSize()) {
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
@@ -54,11 +65,92 @@ class Leader {
 
 	private boolean send(InetAddress IPAddress, String leaderIPAdress, int[] attributeOrder, long budget,
 			Hypercube nextHyperCube) {
-		String serializedData = serializeData(IPAddress, attributeOrder, budget, nextHyperCube);
-		return server.sendMessage(server.getSocket(IPAddress), serializedData);
+		String serializedData = serializeData(attributeOrder, budget, nextHyperCube);
+		return sendMessage(getSocket(IPAddress), serializedData);
 	}
 
-	private String serializeData(InetAddress IPAddress, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
+	/**
+	 * Takes in the data needed to send to the client and turns it into bytes.
+	 * 
+	 * @param attributeOrder Attribute order to run on
+	 * @param budget         time allocated to run
+	 * @param nextHyperCube  Hypercube to process
+	 * @return The serialized data
+	 */
+	private String serializeData(int[] attributeOrder, long budget, Hypercube nextHyperCube) {
 		return null;// TODO
+	}
+
+	/**
+	 * Starts the server instance. Server listens on given port.
+	 * 
+	 * @param port Port to listen for.
+	 */
+	private void startServer(int port) {
+		Thread searchForClientsThread = new Thread(() -> {
+			try (ServerSocket serverSocket = new ServerSocket(port)) {
+				System.out.println("Server is listening on port " + port);
+
+				while (true) {
+					try {
+						Socket socket = serverSocket.accept();
+						System.out.println("Client " + clientCounter + " connected: " + socket.getInetAddress());
+						clientList.add(socket);
+						IPSocketMap.put(socket.getInetAddress(), socket);
+						startListening(socket);
+
+						clientCounter++;
+					} catch (IOException e) {
+						System.out.println("Server exception: " + e.getMessage());
+					}
+				}
+
+			} catch (IOException e) {
+				System.out.println("Could not listen on port " + port);
+			}
+		});
+		searchForClientsThread.start();
+	}
+
+	/**
+	 * Get the i'th client that connected to the server.
+	 * 
+	 * @return The i'th client to have connected. List includes closed sockets as
+	 *         well.
+	 */
+	public Socket getClient(int i) {
+		return clientList.get(i);
+	}
+
+	public int getClientListSize() {
+		return clientList.size();
+	}
+
+	public Socket getSocket(InetAddress address) {
+		return IPSocketMap.get(address);
+	}
+
+	@Override
+	void startListening(Socket socket) {
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+			Thread readThread = new Thread(() -> {
+				try {
+					String receivedMessage;
+					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
+						System.out.println(receivedMessage);
+					}
+					reader.close();
+				} catch (IOException e) {
+					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
+				}
+			});
+			readThread.start();
+
+		} catch (IOException e) {
+			System.err.println(socket.getInetAddress() + " Error encountered when listening: " + e.getMessage());
+		}
 	}
 }

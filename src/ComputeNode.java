@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -14,30 +12,7 @@ public abstract class ComputeNode {
 	 * 
 	 * @param socket The specified socket.
 	 */
-	protected void startListening(Socket socket, NodeType type) {
-		BufferedReader reader;
-		try {
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-			Thread readThread = new Thread(() -> {
-				try {
-					String receivedMessage;
-					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
-						System.out.println(receivedMessage);
-					}
-					reader.close();
-				} catch (IOException e) {
-					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
-					if (type.equals(NodeType.CLIENT))
-						errorFound[0] = true;
-				}
-			});
-			readThread.start();
-
-		} catch (IOException e) {
-			System.err.println(socket.getInetAddress() + " Error encountered when listening: " + e.getMessage());
-		}
-	}
+	abstract void startListening(Socket socket);
 
 	/**
 	 * Sends message between the server and client.
