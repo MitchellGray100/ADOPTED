@@ -8,7 +8,7 @@ class Leader {
 	private Server server;
 
 	public Leader(String configPath) {
-		this.server = new Server(1234);
+		this.server = new Server(ComputeNode.PORT);
 		config = ConfigFile.getInstance(configPath);
 		while (config.getIPaddresses().length != server.getClientListSize()) {
 			try {

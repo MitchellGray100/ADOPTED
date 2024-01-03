@@ -6,6 +6,7 @@ import java.net.Socket;
 
 public abstract class ComputeNode {
 
+	public final static int PORT = 1234;
 	final boolean[] errorFound = new boolean[] { false };
 
 	/**
