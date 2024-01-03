@@ -1,6 +1,6 @@
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -135,15 +135,20 @@ class Leader extends ComputeNode {
 
 	@Override
 	void startListening(Socket socket) {
-		BufferedReader reader;
 		try {
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			DataInputStream in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 
 			Thread readThread = new Thread(() -> {
 				try {
 					String receivedMessage;
-					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
-						System.out.println("test");
+					while (!socket.isClosed() && !errorFound[0]) {
+						// Read the length of the next message
+						int length = in.readInt();
+						if (length > 0) {
+							// Read the message
+							byte[] message = new byte[length];
+							in.readFully(message);
+						}
 //						String results = deserializeClientMessage(receivedMessage);
 //						appendOutputFile(results, config.getResultPath());
 //						if(MCST.hasNextHypercube())
@@ -151,7 +156,7 @@ class Leader extends ComputeNode {
 //						else
 //							socket.close();
 					}
-					reader.close();
+					in.close();
 				} catch (IOException e) {
 					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
 				}
