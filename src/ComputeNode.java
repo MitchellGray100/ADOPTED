@@ -46,4 +46,8 @@ public abstract class ComputeNode {
 		return !(socket == null || !socket.isConnected());
 	}
 
+	protected String deserializeClientMessage() {
+		return null;
+	}
+
 }

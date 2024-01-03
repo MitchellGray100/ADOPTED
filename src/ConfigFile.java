@@ -21,7 +21,7 @@ public class ConfigFile {
 
 	public String[] getIPaddresses() {
 		// TODO Auto-generated method stub
-		return new String[] { "1", "2" };
+		return new String[] { "1" };
 	}
 
 	public long getBudget() {

@@ -1,12 +1,11 @@
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
 class Worker extends ComputeNode {
-	File output;
+	private Socket serverSocket;
 
 	public Worker(String leaderIPAddress) {
 		try (BufferedReader reader = new BufferedReader(new FileReader("ipaddress.txt"))) {
@@ -26,8 +25,6 @@ class Worker extends ComputeNode {
 	public void respond() {
 		sendMessage(getServerSocket(), null);// Todo replace null with LFTJ results
 	}
-
-	private Socket serverSocket;
 
 	/**
 	 * Starts the client. Client connects to server or waits for server to start

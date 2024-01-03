@@ -41,7 +41,7 @@ class Leader extends ComputeNode {
 	public void runQuery(String query) {
 		for (String ipaddress : config.getIPaddresses()) {
 			try {
-				runWithWorker(InetAddress.getByName(ipaddress));
+				runWithWorker(this.getSocket(InetAddress.getByName(ipaddress)));
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -49,8 +49,8 @@ class Leader extends ComputeNode {
 		}
 	}
 
-	public void runWithWorker(InetAddress ipaddress) {
-		send(ipaddress, "182", MCST.getAttributeOrder(), config.getBudget(), MCST.getNextHyperCube());
+	public void runWithWorker(Socket socket) {
+		send(socket, MCST.getAttributeOrder(), config.getBudget(), MCST.getNextHyperCube());
 		// Wait for response
 //		while(connected) {
 //			if(response) {
@@ -63,10 +63,13 @@ class Leader extends ComputeNode {
 //		}
 	}
 
-	private boolean send(InetAddress IPAddress, String leaderIPAdress, int[] attributeOrder, long budget,
-			Hypercube nextHyperCube) {
+	public boolean sendTest(Socket socket, String message) {
+		return sendMessage(socket, message);
+	}
+
+	private boolean send(Socket socket, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
 		String serializedData = serializeData(attributeOrder, budget, nextHyperCube);
-		return sendMessage(getSocket(IPAddress), serializedData);
+		return sendMessage(socket, serializedData);
 	}
 
 	/**
@@ -140,7 +143,13 @@ class Leader extends ComputeNode {
 				try {
 					String receivedMessage;
 					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
-						System.out.println(receivedMessage);
+						System.out.println("test");
+//						String results = deserializeClientMessage(receivedMessage);
+//						appendOutputFile(results, config.getResultPath());
+//						if(MCST.hasNextHypercube())
+//							send(socket, attributeOrder, budget, hypercube)
+//						else
+//							socket.close();
 					}
 					reader.close();
 				} catch (IOException e) {
