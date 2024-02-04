@@ -1,6 +1,9 @@
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -63,13 +66,15 @@ class Leader extends ComputeNode {
 //		}
 	}
 
-	public boolean sendTest(Socket socket, String message) {
-		return sendMessage(socket, message);
-	}
-
-	private boolean send(Socket socket, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
-		String serializedData = serializeData(attributeOrder, budget, nextHyperCube);
-		return sendMessage(socket, serializedData);
+	public boolean send(Socket socket, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
+		byte[] serializedData;
+		try {
+			serializedData = serializeData(attributeOrder, budget, nextHyperCube);
+			return sendMessage(socket, serializedData);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**
@@ -79,9 +84,27 @@ class Leader extends ComputeNode {
 	 * @param budget         time allocated to run
 	 * @param nextHyperCube  Hypercube to process
 	 * @return The serialized data
+	 * @throws IOException
 	 */
-	private String serializeData(int[] attributeOrder, long budget, Hypercube nextHyperCube) {
-		return null;// TODO
+	private byte[] serializeData(int[] attributeOrder, long budget, Hypercube nextHyperCube) throws IOException {
+		byte[] serializedData;
+		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+			oos.writeObject(attributeOrder);
+			oos.writeLong(budget);
+			oos.writeObject(nextHyperCube);
+
+			oos.flush();
+			serializedData = bos.toByteArray();
+		}
+
+		try (ByteArrayOutputStream bosWithLength = new ByteArrayOutputStream();
+				DataOutputStream dosWithLength = new DataOutputStream(bosWithLength)) {
+			dosWithLength.writeInt(serializedData.length);
+			dosWithLength.write(serializedData);
+			return bosWithLength.toByteArray();
+		}
 	}
 
 	/**
@@ -140,7 +163,7 @@ class Leader extends ComputeNode {
 
 			Thread readThread = new Thread(() -> {
 				try {
-					String receivedMessage;
+					byte[] receivedMessage;
 					while (!socket.isClosed() && !errorFound[0]) {
 						// Read the length of the next message
 						int length = in.readInt();

@@ -1,7 +1,10 @@
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 
 class Worker extends ComputeNode {
@@ -55,18 +58,20 @@ class Worker extends ComputeNode {
 
 	@Override
 	void startListening(Socket socket) {
-		BufferedReader reader;
+		System.out.println("Started listening");
 		try {
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			InputStream socketInputStream = socket.getInputStream();
+			DataInputStream dis = new DataInputStream(socketInputStream);
 
 			Thread readThread = new Thread(() -> {
 				try {
-					String receivedMessage;
-					while ((receivedMessage = reader.readLine()) != null && !errorFound[0]) {
-						System.out.println(receivedMessage);
+					while (!socket.isClosed() && !errorFound[0]) {
+						int length = dis.readInt();
+						byte[] message = new byte[length];
+						dis.readFully(message);
+						Object[] deserializedData = deserializeData(message);
 					}
-					reader.close();
-				} catch (IOException e) {
+				} catch (IOException | ClassNotFoundException e) {
 					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
 					errorFound[0] = true;
 				}
@@ -75,6 +80,26 @@ class Worker extends ComputeNode {
 
 		} catch (IOException e) {
 			System.err.println(socket.getInetAddress() + " Error encountered when listening: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Deserializes the data sent by the Server
+	 * 
+	 * @param data Serialized data from Server
+	 * @return Object array containing attributeOrder, budget, and hyperCube
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
+	public static Object[] deserializeData(byte[] data) throws IOException, ClassNotFoundException {
+		try (ByteArrayInputStream bis = new ByteArrayInputStream(data);
+				ObjectInputStream ois = new ObjectInputStream(bis)) {
+
+			int[] attributeOrder = (int[]) ois.readObject();
+			long budget = ois.readLong();
+			Hypercube nextHyperCube = (Hypercube) ois.readObject();
+
+			return new Object[] { attributeOrder, budget, nextHyperCube };
 		}
 	}
 }

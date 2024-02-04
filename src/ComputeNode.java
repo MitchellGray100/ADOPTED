@@ -1,5 +1,6 @@
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public abstract class ComputeNode {
@@ -17,20 +18,25 @@ public abstract class ComputeNode {
 	/**
 	 * Sends message between the server and client.
 	 * 
-	 * @param socket  The socket connecting the client and server.
-	 * @param message The message to send over the socket.
-	 * @param type    Whether or not the compute node is a server or client.
+	 * @param socket         The socket connecting the client and server.
+	 * @param serializedData The message to send over the socket.
+	 * @param type           Whether or not the compute node is a server or client.
 	 * @return whether or not the message sent successfully
 	 */
-	protected boolean sendMessage(Socket socket, String message) {
+	protected boolean sendMessage(Socket socket, byte[] serializedData) {
 		if (socket == null || !socket.isConnected())
 			return false;
 
 		try {
-			PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+			OutputStream out = socket.getOutputStream();
+			DataOutputStream dos = new DataOutputStream(out);
 
 			Thread writeThread = new Thread(() -> {
-				writer.println(message);
+				try {
+					dos.write(serializedData);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			});
 			writeThread.start();
 
