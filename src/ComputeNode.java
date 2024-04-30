@@ -3,15 +3,28 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
+/**
+ * A node within the architecture of ADOPTED. This can be a Worker or Leader.
+ * 
+ * @author Mitchell Gray
+ *
+ */
 public abstract class ComputeNode {
 
+	/**
+	 * The Port for Workers to listen to. The Port for Leaders to broadcast to.
+	 */
 	public final static int PORT = 1234;
+
+	/**
+	 * Whether or not an error occurred at any point while a node was running.
+	 */
 	final boolean[] errorFound = new boolean[] { false };
 
 	/**
 	 * Allows socket to start receiving messages.
 	 * 
-	 * @param socket The specified socket.
+	 * @param socket The specified socket to receive messages on.
 	 */
 	abstract void startListening(Socket socket);
 
@@ -24,6 +37,7 @@ public abstract class ComputeNode {
 	 * @return whether or not the message sent successfully
 	 */
 	protected boolean sendMessage(Socket socket, byte[] serializedData) {
+		// If something is wrong with the socket
 		if (socket == null || !socket.isConnected())
 			return false;
 
@@ -31,6 +45,7 @@ public abstract class ComputeNode {
 			OutputStream out = socket.getOutputStream();
 			DataOutputStream dos = new DataOutputStream(out);
 
+			// Asynchronously write data to the output stream.
 			Thread writeThread = new Thread(() -> {
 				try {
 					dos.write(serializedData);
@@ -41,17 +56,30 @@ public abstract class ComputeNode {
 			writeThread.start();
 
 		} catch (IOException e) {
+			// Socket error, set errorFound to true
 			System.out.println("Error handling socket connection: " + e.getMessage());
 			errorFound[0] = true;
+			return false;
 		}
 
 		return true;
 	}
 
+	/**
+	 * Check that the message should be able to be sent without failure.
+	 * 
+	 * @param socket The socket to check if it's working
+	 * @return Whether or not the socket is working
+	 */
 	protected boolean canSendMessage(Socket socket) {
 		return !(socket == null || !socket.isConnected());
 	}
 
+	/**
+	 * Deserializes the data sent by the worker.
+	 * 
+	 * @return Object of the client message
+	 */
 	protected String deserializeClientMessage() {
 		return null;
 	}

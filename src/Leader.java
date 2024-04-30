@@ -10,20 +10,44 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 class Leader extends ComputeNode {
+	/**
+	 * The config file to get fields from
+	 */
 	private ConfigFile config;
+
+	/**
+	 * The MCST to receive task info from
+	 */
 	private MonteCarloSearchTree MCST;
-	public ConcurrentLinkedQueue<Message> messageQueue = new ConcurrentLinkedQueue<Message>();
+
+	/**
+	 * Keeps track of number of clients connected to leader.
+	 */
 	private static int clientCounter = 0;
+
+	/**
+	 * Store all client Sockets
+	 */
 	private ArrayList<Socket> clientList = new ArrayList<Socket>();
+
+	/**
+	 * Given an IPAdress, get the corresponding socket
+	 */
 	private HashMap<InetAddress, Socket> IPSocketMap = new HashMap<InetAddress, Socket>();
 
+	/**
+	 * Constructor for the leader
+	 * 
+	 * @param configPath Path to the config file
+	 */
 	public Leader(String configPath) {
 		startServer(ComputeNode.PORT);
 		config = ConfigFile.getInstance(configPath);
 
+		// Wait until all clients have connected.
+		// Needs changed for fault tolerance.
 		while (config.getIPaddresses().length != getClientListSize()) {
 			try {
 				Thread.sleep(500);
@@ -34,6 +58,7 @@ class Leader extends ComputeNode {
 		MCST = new MonteCarloSearchTree();
 	}
 
+	// Run all queries in config file on the workers.
 	public void runQueries() {
 		ArrayList<String> queries = config.getQueries();
 		for (String query : queries) {
@@ -41,6 +66,7 @@ class Leader extends ComputeNode {
 		}
 	}
 
+	// Run query across all workers
 	public void runQuery(String query) {
 		for (String ipaddress : config.getIPaddresses()) {
 			try {
@@ -52,7 +78,13 @@ class Leader extends ComputeNode {
 		}
 	}
 
+	/**
+	 * Start running query on a worker.
+	 * 
+	 * @param socket The socket to communicate to the worker with.
+	 */
 	public void runWithWorker(Socket socket) {
+		// Send initial message to workers
 		send(socket, MCST.getAttributeOrder(), config.getBudget(), MCST.getNextHyperCube());
 		// Wait for response
 //		while(connected) {
@@ -66,9 +98,19 @@ class Leader extends ComputeNode {
 //		}
 	}
 
+	/**
+	 * Send a task to a worker
+	 * 
+	 * @param socket         The socket to communnicate with the worker.
+	 * @param attributeOrder The attribute order to run the task with.
+	 * @param budget         The time quantum for the ADOPT code
+	 * @param nextHyperCube  The hypercube to run on
+	 * @return Whether or not the message was sent successfully
+	 */
 	public boolean send(Socket socket, int[] attributeOrder, long budget, Hypercube nextHyperCube) {
 		byte[] serializedData;
 		try {
+			// Serialize the task and send it
 			serializedData = serializeData(attributeOrder, budget, nextHyperCube);
 			return sendMessage(socket, serializedData);
 		} catch (IOException e) {
@@ -101,6 +143,7 @@ class Leader extends ComputeNode {
 
 		try (ByteArrayOutputStream bosWithLength = new ByteArrayOutputStream();
 				DataOutputStream dosWithLength = new DataOutputStream(bosWithLength)) {
+			// Write length of message and then the data
 			dosWithLength.writeInt(serializedData.length);
 			dosWithLength.write(serializedData);
 			return bosWithLength.toByteArray();
@@ -117,6 +160,8 @@ class Leader extends ComputeNode {
 			try (ServerSocket serverSocket = new ServerSocket(port)) {
 				System.out.println("Server is listening on port " + port);
 
+				// Continuously add clients as they attempt to connect.
+				// A failed worker can crash and restart and reconnect successfully here.
 				while (true) {
 					try {
 						Socket socket = serverSocket.accept();
@@ -148,10 +193,21 @@ class Leader extends ComputeNode {
 		return clientList.get(i);
 	}
 
+	/**
+	 * Returns the ClientList size
+	 * 
+	 * @return the size.
+	 */
 	public int getClientListSize() {
 		return clientList.size();
 	}
 
+	/**
+	 * Gets the socket corresponding to a worker IPaddress.
+	 * 
+	 * @param address
+	 * @return the socket
+	 */
 	public Socket getSocket(InetAddress address) {
 		return IPSocketMap.get(address);
 	}

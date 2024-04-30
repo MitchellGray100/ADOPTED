@@ -8,9 +8,18 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 
 class Worker extends ComputeNode {
+	/**
+	 * The socket of the Leader
+	 */
 	private Socket serverSocket;
 
+	/**
+	 * Constructor to create a Worker object
+	 * 
+	 * @param leaderIPAddress The IPAdress of the Node running the Leader
+	 */
 	public Worker(String leaderIPAddress) {
+		// Connect to the Leader
 		try (BufferedReader reader = new BufferedReader(new FileReader("ipaddress.txt"))) {
 			String IPADDRESS = reader.readLine(); // Reads the first line of the file
 			startClient(IPADDRESS, ComputeNode.PORT);
@@ -20,11 +29,17 @@ class Worker extends ComputeNode {
 		}
 	}
 
+	/**
+	 * Run ADOPT code to run LFTJ on the current task's HyperCube
+	 */
 	public void processHypercube() {
 		// *preexisting LFTJ method*
 		// output results to output;
 	}
 
+	/**
+	 * Send the results of processHypercube() to the Leader
+	 */
 	public void respond() {
 		sendMessage(getServerSocket(), null);// Todo replace null with LFTJ results
 	}
@@ -35,9 +50,11 @@ class Worker extends ComputeNode {
 	 * 
 	 * @param hostname IPaddress of server.
 	 * @param port     Port the server is listening on.
-	 * @param message  What to send the server.
 	 */
 	private void startClient(String hostname, int port) {
+		// Continuously tries to connect to server until successful.
+		// Needs to be changed for fault tolerance.
+		// Timeout to elect a new leader
 		while (true) {
 			System.out.println("Trying to connect to Server");
 			try {
@@ -52,6 +69,11 @@ class Worker extends ComputeNode {
 		}
 	}
 
+	/**
+	 * Returns the socket of the Leader
+	 * 
+	 * @return Socket of Leader
+	 */
 	public Socket getServerSocket() {
 		return serverSocket;
 	}
@@ -63,15 +85,21 @@ class Worker extends ComputeNode {
 			InputStream socketInputStream = socket.getInputStream();
 			DataInputStream dis = new DataInputStream(socketInputStream);
 
+			// Asynchronously read data sent to our socket
 			Thread readThread = new Thread(() -> {
 				try {
+					// While there are no errors and we received data
 					while (!socket.isClosed() && !errorFound[0]) {
+						// Grab length of message (first int of message)
 						int length = dis.readInt();
+						// Allocate enough room for the message and then read
 						byte[] message = new byte[length];
 						dis.readFully(message);
+						// Deserialize the data sent from the leader
 						Object[] deserializedData = deserializeData(message);
 					}
 				} catch (IOException | ClassNotFoundException e) {
+					// Catch error and set errorFound to true
 					System.out.println("Error reading from socket: " + e.getMessage() + " " + socket.getInetAddress());
 					errorFound[0] = true;
 				}
